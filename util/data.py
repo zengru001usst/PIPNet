@@ -140,8 +140,8 @@ def create_datasets(transform1, transform2, transform_no_augment, num_channels:i
     
     trainvalset = torchvision.datasets.ImageFolder(train_dir)
     classes = trainvalset.classes
-    targets = trainvalset.targets
-    indices = list(range(len(trainvalset)))
+    targets = trainvalset.targets #是一个标签列表，表示数据集中每张图像的类别，它的长度等于数据集的图片数量，每个元素是该图片对应的整数标签
+    indices = list(range(len(trainvalset))) #生成一个索引列表，表示数据集中每个图像的编号
 
     train_indices = indices
     
@@ -156,9 +156,11 @@ def create_datasets(transform1, transform2, transform_no_augment, num_channels:i
         testset = torchvision.datasets.ImageFolder(test_dir, transform=transform_no_augment)
     
     trainset = torch.utils.data.Subset(TwoAugSupervisedDataset(trainvalset, transform1=transform1, transform2=transform2), indices=train_indices)
+    #TwoAugSupervisedDataset得到的数据集应该返回两种aug的图片
     trainset_normal = torch.utils.data.Subset(torchvision.datasets.ImageFolder(train_dir, transform=transform_no_augment), indices=train_indices)
     trainset_normal_augment = torch.utils.data.Subset(torchvision.datasets.ImageFolder(train_dir, transform=transforms.Compose([transform1, transform2])), indices=train_indices)
-    projectset = torchvision.datasets.ImageFolder(project_dir, transform=transform_no_augment)
+    #这里跟trainset的区别在于 compose是aug的线性拼接
+    projectset = torchvision.datasets.ImageFolder(project_dir, transform=transform_no_augment) #project怎么理解
 
     if test_dir_projection is not None:
         testset_projection = torchvision.datasets.ImageFolder(test_dir_projection, transform=transform_no_augment)
@@ -194,7 +196,7 @@ def get_pets(augment:bool, train_dir:str, project_dir: str, test_dir:str, img_si
             transforms.Resize(size=(img_size+48, img_size+48)), 
             TrivialAugmentWideNoColor(),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomResizedCrop(img_size+8, scale=(0.95, 1.))
+            transforms.RandomResizedCrop(img_size+8, scale=(0.95, 1.)) #似乎transform1和transform2的图像尺寸有所不同，是因为有pooling所以不影响吗
         ])
         
         transform2 = transforms.Compose([
