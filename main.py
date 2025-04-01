@@ -17,6 +17,8 @@ from shutil import copy
 import matplotlib.pyplot as plt
 from copy import deepcopy
 
+### mark some positions where i can't understand or branches left for future to check
+
 def run_pipnet(args=None):
 
     torch.manual_seed(args.seed)
@@ -83,7 +85,7 @@ def run_pipnet(args=None):
     net = net.to(device=device)
     net = nn.DataParallel(net, device_ids = device_ids)    
     
-    optimizer_net, optimizer_classifier, params_to_freeze, params_to_train, params_backbone = get_optimizer_nn(net, args)   
+    optimizer_net, optimizer_classifier, params_to_freeze, params_to_train, params_backbone = get_optimizer_nn(net, args)      # 是分层优化吗
 
     # Initialize or load model
     with torch.no_grad():
@@ -114,13 +116,13 @@ def run_pipnet(args=None):
             if args.bias:
                 torch.nn.init.constant_(net.module._classification.bias, val=0.)
             torch.nn.init.constant_(net.module._multiplier, val=2.)
-            net.module._multiplier.requires_grad = False
+            net.module._multiplier.requires_grad = False           #这里的muliplier指的是什么（权重放缩因子），为什么有特殊赋值
 
             print("Classification layer initialized with mean", torch.mean(net.module._classification.weight).item(), flush=True)
     
     # Define classification loss function and scheduler
     criterion = nn.NLLLoss(reduction='mean').to(device)
-    scheduler_net = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_net, T_max=len(trainloader_pretraining)*args.epochs_pretrain, eta_min=args.lr_block/100., last_epoch=-1)
+    scheduler_net = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_net, T_max=len(trainloader_pretraining)*args.epochs_pretrain, eta_min=args.lr_block/100., last_epoch=-1) #学习怎么设置的
 
     # Forward one batch through the backbone to get the latent output size
     with torch.no_grad():
