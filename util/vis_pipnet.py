@@ -50,14 +50,14 @@ def visualize_topk(net, projectloader, num_classes, device, foldername, args: ar
     images_seen = 0
     topks = dict()
     # Iterate through the training set
-    for i, (xs, ys) in img_iter:
+    for i, (xs, ys) in img_iter:  #设置里batch为1
         images_seen+=1
         xs, ys = xs.to(device), ys.to(device)
 
         with torch.no_grad():
             # Use the model to classify this batch of input data
             pfs, pooled, _ = net(xs, inference=True)
-            pooled = pooled.squeeze(0) 
+            pooled = pooled.squeeze(0)   
             pfs = pfs.squeeze(0) 
             
             for p in range(pooled.shape[0]):
@@ -69,7 +69,7 @@ def visualize_topk(net, projectloader, num_classes, device, foldername, args: ar
                     if len(topks[p]) < k:
                         topks[p].append((i, pooled[p].item()))
                     else:
-                        topks[p] = sorted(topks[p], key=lambda tup: tup[1], reverse=True)
+                        topks[p] = sorted(topks[p], key=lambda tup: tup[1], reverse=True) #按照topks[p]里面元组的第二个元素进行排序，即pooled（概率）
                         if topks[p][-1][1] < pooled[p].item():
                             topks[p][-1] = (i, pooled[p].item())
                         if topks[p][-1][1] == pooled[p].item():
@@ -84,7 +84,7 @@ def visualize_topk(net, projectloader, num_classes, device, foldername, args: ar
         found = False
         for idx, score in topks[p]:
             alli.append(idx)
-            if score > 0.1:  #in case prototypes have fewer than k well-related patches
+            if score > 0.1:  #in case prototypes have fewer than k well-related patches 这里注释好像不太对，应该是只要有较大socre就是found，要是实现功能得是score<0.1
                 found = True
         if not found:
             prototypes_not_used.append(p)
@@ -108,11 +108,11 @@ def visualize_topk(net, projectloader, num_classes, device, foldername, args: ar
                             with torch.no_grad():
                                 softmaxes, pooled, out = net(xs, inference=True) #softmaxes has shape (1, num_prototypes, W, H)
                                 outmax = torch.amax(out,dim=1)[0] #shape ([1]) because batch size of projectloader is 1
-                                if outmax.item() == 0.:
+                                if outmax.item() == 0.:         # amax不返回索引，这里最终输出的应该是类别
                                     abstained+=1
                             
                             # Take the max per prototype.                             
-                            max_per_prototype, max_idx_per_prototype = torch.max(softmaxes, dim=0)
+                            max_per_prototype, max_idx_per_prototype = torch.max(softmaxes, dim=0) #既然bs为1，为什么还要在这个维度做比较，去掉第一维度？确实
                             max_per_prototype_h, max_idx_per_prototype_h = torch.max(max_per_prototype, dim=1)
                             max_per_prototype_w, max_idx_per_prototype_w = torch.max(max_per_prototype_h, dim=1) #shape (num_prototypes)
                             
