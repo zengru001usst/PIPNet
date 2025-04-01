@@ -163,7 +163,7 @@ def get_optimizer_nn(net, args: argparse.Namespace) -> torch.optim.Optimizer:
     if 'resnet50' in args.net: 
         # freeze resnet50 except last convolutional layer
         for name,param in net.module._net.named_parameters():
-            if 'layer4.2' in name:
+            if 'layer4.2' in name:      #这里if的逻辑是满足layer4.2 就不会考虑是不是layer4 了
                 params_to_train.append(param)
             elif 'layer4' in name or 'layer3' in name:
                 params_to_freeze.append(param)
@@ -210,7 +210,7 @@ def get_optimizer_nn(net, args: argparse.Namespace) -> torch.optim.Optimizer:
             {"params": classification_weight, "lr": args.lr, "weight_decay_rate": args.weight_decay},
             {"params": classification_bias, "lr": args.lr, "weight_decay_rate": 0},
     ]
-          
+          #分层进行优化，不同的层有不同的学习率，在设置里面net和block的学习率设置都是0.0005，lr的学习率较大是0.05（输出层快速变化以适应任务）
     if args.optimizer == 'Adam':
         optimizer_net = torch.optim.AdamW(paramlist_net,lr=args.lr,weight_decay=args.weight_decay)
         optimizer_classifier = torch.optim.AdamW(paramlist_classifier,lr=args.lr,weight_decay=args.weight_decay)
