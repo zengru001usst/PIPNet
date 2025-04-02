@@ -234,6 +234,7 @@ def run_pipnet(args=None):
             with torch.no_grad():
                 torch.set_printoptions(profile="full")
                 net.module._classification.weight.copy_(torch.clamp(net.module._classification.weight.data - 0.001, min=0.)) 
+                # copy_是将右侧计算的值直接覆盖weight
                 print("Classifier weights: ", net.module._classification.weight[net.module._classification.weight.nonzero(as_tuple=True)], (net.module._classification.weight[net.module._classification.weight.nonzero(as_tuple=True)]).shape, flush=True)
                 if args.bias:
                     print("Classifier bias: ", net.module._classification.bias, flush=True)
